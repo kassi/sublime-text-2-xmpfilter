@@ -1,21 +1,25 @@
-import sublime, sublime_plugin, subprocess
+import os, sublime, sublime_plugin, subprocess
 
 class ExecuteAndUpdateRubyMarkersCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         region = sublime.Region(0, self.view.size())
         text = self.view.substr(region)
+        shell = os.name == "nt"
 
         s = subprocess.Popen(
             [ '/usr/bin/env', 'xmpfilter' ],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE )
-        out = s.communicate(text.encode('utf-8'))
+            stderr=subprocess.PIPE,
+            shell=shell,
+            universal_newlines=True )
+        output, error = s.communicate(text)
+
         if s.returncode != None and s.returncode != 0:
-            sublime.message_dialog("There was an error: " + out[1])
+            sublime.message_dialog("There was an error: " + error)
             return
 
-        self.view.replace(edit, region, out[0])
+        self.view.replace(edit, region, output)
 
 class SetRubyMarkersCommand(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -26,10 +30,13 @@ class SetRubyMarkersCommand(sublime_plugin.TextCommand):
             [ '/usr/bin/env', 'xmpfilter', '-m' ],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE )
-        out = s.communicate(text.encode('utf-8'))
+            stderr=subprocess.PIPE,
+            shell=shell,
+            universal_newlines=True )
+        output, error = s.communicate(text)
+
         if s.returncode != None and s.returncode != 0:
-            sublime.message_dialog("There was an error: " + out[1])
+            sublime.message_dialog("There was an error: " + error)
             return
 
-        self.view.replace(edit, region, out[0])
+        self.view.replace(edit, region, output)
